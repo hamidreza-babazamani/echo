@@ -1,9 +1,16 @@
+import Sidebar from './components/Sidebar'
+
 function App() {
   return (
-    <div className="min-h-screen bg-blue-500 flex items-center justify-center">
-      <h1 className="text-white text-4xl font-bold">
-        🎉 Tailwind Works!
-      </h1>
+    <div className="min-h-screen bg-cover bg-center bg-[url('./assets/bgImage.svg')]">
+      <div className="min-h-screen w-full bg-black/50 backdrop-blur-lg flex items-center justify-center">
+        <div className="w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl grid grid-cols-[1fr_2fr]">
+          <Sidebar />
+          <div className="bg-[#282142]/30 text-white flex items-center justify-center">
+            <p>Chat Container (Coming Soon...)</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
