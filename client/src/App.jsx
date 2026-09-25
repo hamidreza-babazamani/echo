@@ -1,4 +1,5 @@
 import Sidebar from './components/Sidebar'
+import ChatContainer from './components/ChatContainer'
 
 function App() {
   return (
@@ -6,9 +7,7 @@ function App() {
       <div className="min-h-screen w-full bg-black/50 backdrop-blur-lg flex items-center justify-center">
         <div className="w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl grid grid-cols-[1fr_2fr]">
           <Sidebar />
-          <div className="bg-[#282142]/30 text-white flex items-center justify-center">
-            <p>Chat Container (Coming Soon...)</p>
-          </div>
+          <ChatContainer />
         </div>
       </div>
     </div>
