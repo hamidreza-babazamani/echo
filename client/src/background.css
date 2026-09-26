@@ -1,0 +1,326 @@
+/* =========================================
+   ECHO CHAT CINEMATIC BACKGROUND
+========================================= */
+
+.scene {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(180deg, #010616 0%, #03091d 42%, #07132e 67%, #020611 100%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* =========================================
+   SKY
+========================================= */
+
+.sky {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(38, 68, 170, .20), transparent 48%),
+        radial-gradient(ellipse at 82% 38%, rgba(37, 70, 160, .12), transparent 35%),
+        linear-gradient(180deg, rgba(2, 7, 25, .2), rgba(1, 5, 18, .8));
+}
+
+/* =========================================
+   GIANT ORB
+========================================= */
+
+.giant-orb {
+    position: absolute;
+    width: 760px;
+    height: 760px;
+    border-radius: 50%;
+    top: -420px;
+    left: 31%;
+    background: radial-gradient(circle at 48% 70%, rgba(23, 42, 112, .92), rgba(10, 22, 70, .86) 45%, rgba(4, 10, 34, .7) 70%, transparent 72%);
+    border: 1px solid rgba(102, 125, 255, .65);
+    box-shadow:
+        0 0 20px rgba(71, 95, 255, .5),
+        0 0 70px rgba(71, 95, 255, .25),
+        inset 30px 0 80px rgba(50, 80, 255, .2);
+    opacity: .95;
+}
+
+.giant-orb::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(from 210deg, transparent 0deg, rgba(50, 110, 255, .9) 40deg, rgba(170, 110, 255, .8) 100deg, transparent 150deg);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    padding: 2px;
+}
+
+/* =========================================
+   ATMOSPHERIC LIGHT
+========================================= */
+
+.atmosphere {
+    position: absolute;
+    width: 900px;
+    height: 400px;
+    top: 25%;
+    left: 20%;
+    background: radial-gradient(ellipse, rgba(61, 82, 255, .10), transparent 70%);
+    filter: blur(70px);
+}
+
+/* =========================================
+   MOUNTAINS BASE
+========================================= */
+
+.mountains {
+    position: absolute;
+    left: -5%;
+    bottom: 31%;
+    width: 110%;
+    clip-path: polygon(0 100%, 0 68%, 5% 62%, 10% 75%, 16% 50%, 21% 67%, 27% 43%, 33% 70%, 39% 53%, 44% 65%, 50% 42%, 56% 64%, 62% 48%, 68% 69%, 75% 46%, 82% 66%, 88% 52%, 94% 70%, 100% 55%, 100% 100%);
+}
+
+.mountains-back {
+    height: 330px;
+    background: linear-gradient(180deg, #101a3c, #050b1d);
+    opacity: .72;
+    filter: blur(.4px);
+}
+
+.mountains-middle {
+    height: 250px;
+    bottom: 27%;
+    background: linear-gradient(180deg, #0a122b, #030817);
+    opacity: .9;
+    transform: scaleX(1.03);
+}
+
+.mountains-front {
+    height: 190px;
+    bottom: 24%;
+    background: linear-gradient(180deg, #060b19, #01040c);
+    clip-path: polygon(0 100%, 0 65%, 8% 45%, 15% 72%, 23% 52%, 31% 76%, 40% 42%, 48% 68%, 57% 48%, 65% 73%, 73% 50%, 82% 72%, 90% 45%, 100% 64%, 100% 100%);
+}
+
+/* =========================================
+   HORIZON
+========================================= */
+
+.horizon-light {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 28%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(94, 84, 255, .35) 20%, rgba(160, 99, 255, .9) 50%, rgba(90, 100, 255, .35) 80%, transparent);
+    box-shadow: 0 0 15px rgba(137, 92, 255, .8), 0 0 40px rgba(90, 90, 255, .35);
+}
+
+/* =========================================
+   LAKE
+========================================= */
+
+.lake {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30%;
+    background: linear-gradient(180deg, #040a19 0%, #020817 45%, #01040d 100%);
+    overflow: hidden;
+}
+
+.lake::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(180deg, transparent 0px, transparent 17px, rgba(91, 105, 180, .045) 18px, transparent 19px);
+    opacity: .8;
+}
+
+.lake-reflection {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 50%;
+    filter: blur(12px);
+    opacity: .45;
+}
+
+.reflection-1 {
+    width: 250px;
+    left: 26%;
+    background: linear-gradient(180deg, rgba(100, 81, 255, .5), transparent);
+}
+
+.reflection-2 {
+    width: 350px;
+    left: 48%;
+    background: linear-gradient(180deg, rgba(76, 98, 255, .45), transparent);
+}
+
+.reflection-3 {
+    width: 170px;
+    left: 75%;
+    background: linear-gradient(180deg, rgba(163, 77, 255, .35), transparent);
+}
+
+/* =========================================
+   CITY
+========================================= */
+
+.city {
+    position: absolute;
+    right: 4%;
+    bottom: 30%;
+    width: 230px;
+    height: 170px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    opacity: .75;
+}
+
+.city span {
+    display: block;
+    width: 13px;
+    background: linear-gradient(180deg, #111b38, #050916);
+    position: relative;
+}
+
+.city span::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    top: 12px;
+    bottom: 10px;
+    background: repeating-linear-gradient(180deg, rgba(160, 183, 255, .65) 0px, rgba(160, 183, 255, .65) 2px, transparent 3px, transparent 12px);
+    opacity: .45;
+}
+
+.city span:nth-child(1) {
+    height: 50px;
+}
+
+.city span:nth-child(2) {
+    height: 80px;
+}
+
+.city span:nth-child(3) {
+    height: 40px;
+}
+
+.city span:nth-child(4) {
+    height: 105px;
+}
+
+.city span:nth-child(5) {
+    height: 65px;
+}
+
+.city span:nth-child(6) {
+    height: 145px;
+}
+
+.city span:nth-child(7) {
+    height: 75px;
+}
+
+.city span:nth-child(8) {
+    height: 110px;
+}
+
+.city span:nth-child(9) {
+    height: 50px;
+}
+
+.city span:nth-child(10) {
+    height: 90px;
+}
+
+.city span:nth-child(11) {
+    height: 65px;
+}
+
+.city span:nth-child(12) {
+    height: 125px;
+}
+
+.city::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 220px;
+    right: 65px;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(220, 220, 255, .9), rgba(90, 110, 255, .15));
+    box-shadow: 0 0 8px rgba(180, 190, 255, .8);
+}
+
+/* =========================================
+   FOREGROUND ROCKS
+========================================= */
+
+.rock {
+    position: absolute;
+    bottom: 0;
+    background: linear-gradient(135deg, #0a0e17, #02040a);
+    filter: drop-shadow(0 -10px 20px rgba(0, 0, 0, .4));
+}
+
+.rock-left {
+    left: -80px;
+    width: 390px;
+    height: 190px;
+    clip-path: polygon(0 100%, 0 65%, 15% 58%, 25% 32%, 42% 50%, 52% 25%, 68% 48%, 83% 39%, 100% 62%, 100% 100%);
+}
+
+.rock-right {
+    right: -100px;
+    width: 330px;
+    height: 220px;
+    clip-path: polygon(0 100%, 8% 62%, 23% 48%, 38% 60%, 51% 28%, 65% 48%, 79% 36%, 100% 60%, 100% 100%);
+}
+
+/* =========================================
+   MIST
+========================================= */
+
+.mist {
+    position: absolute;
+    height: 120px;
+    border-radius: 50%;
+    filter: blur(35px);
+    background: rgba(110, 115, 180, .06);
+}
+
+.mist-1 {
+    width: 650px;
+    left: 5%;
+    bottom: 27%;
+}
+
+.mist-2 {
+    width: 500px;
+    right: 10%;
+    bottom: 25%;
+}
+
+/* =========================================
+   ECHO CONTENT (LAYER ON TOP)
+========================================= */
+
+.echo-content {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
