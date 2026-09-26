@@ -3,6 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/userRoutes.js";
+import messageRouter from "./routes/messageRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,6 +22,7 @@ app.use("/api/status", (req, res) => {
 
 // Routes
 app.use("/api/auth", userRouter);
+app.use("/api/messages", messageRouter);
 
 // Start Server
 app.listen(PORT, () => {
