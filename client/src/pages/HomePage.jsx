@@ -1,76 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useChat } from "../context/ChatContext.jsx";
 import echoLogo from "/favicon.png";
 import "../Chat.css";
 
-// ==================== DUMMY DATA ====================
-const dummyUsers = [
-  {
-    _id: "user1",
-    fullName: "Alison Martin",
-    profilePic: "https://i.pravatar.cc/100?img=47",
-    bio: "Hi, I am Alison!",
-  },
-  {
-    _id: "user2",
-    fullName: "Martin Johnson",
-    profilePic: "https://i.pravatar.cc/100?img=12",
-    bio: "Hey, I'm using Echo Chat",
-  },
-  {
-    _id: "user3",
-    fullName: "Enrique Martinez",
-    profilePic: "https://i.pravatar.cc/100?img=11",
-    bio: "Hello there!",
-  },
-  {
-    _id: "user4",
-    fullName: "Marco Jones",
-    profilePic: "https://i.pravatar.cc/100?img=13",
-    bio: "Just chilling",
-  },
-  {
-    _id: "user5",
-    fullName: "Richard Smith",
-    profilePic: "https://i.pravatar.cc/100?img=14",
-    bio: "Hi everyone!",
-  },
-];
-
-const dummyMessages = [
-  {
-    _id: "msg1",
-    senderId: "user1",
-    text: "Hey! How are you doing?",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "msg2",
-    senderId: "me",
-    text: "I'm doing great! Nice to hear from you.",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "msg3",
-    senderId: "user1",
-    text: "Are you free for a quick chat?",
-    createdAt: new Date().toISOString(),
-  },
-];
-
-// ==================== COMPONENT ====================
 const HomePage = () => {
-  const { logout } = useAuth();
+  const { logout, onlineUsers, authUser } = useAuth();
+  const {
+    users,
+    messages,
+    selectedUser,
+    setSelectedUser,
+    unseenMessages,
+    setUnseenMessages,
+    getMessages,
+    sendMessage,
+  } = useChat();
 
-  const [users] = useState(dummyUsers);
-  const [selectedUser, setSelectedUser] = useState(dummyUsers[1]);
-  const [messages, setMessages] = useState(dummyMessages);
   const [input, setInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
-
   const scrollEnd = useRef();
 
-  // Filter users by search
   const filteredUsers = useMemo(() => {
     if (!searchInput) return users;
     return users.filter((u) =>
@@ -78,24 +28,26 @@ const HomePage = () => {
     );
   }, [searchInput, users]);
 
-  // Auto scroll to bottom on new message
   useEffect(() => {
     scrollEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ==================== HANDLERS ====================
-  const handleSendMessage = (e) => {
+  useEffect(() => {
+    if (selectedUser) getMessages(selectedUser._id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setUnseenMessages((prev) => ({ ...prev, [selectedUser._id]: 0 }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
-
-    const newMessage = {
-      _id: Date.now().toString(),
-      senderId: "me",
-      text: input.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
+    if (!input.trim() || !selectedUser) return;
+    await sendMessage({ text: input.trim() });
     setInput("");
   };
 
@@ -104,18 +56,17 @@ const HomePage = () => {
     window.location.href = "/login";
   };
 
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString("en-US", {
+  const formatTime = (date) =>
+    new Date(date).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
-  };
 
-  // ==================== RENDER ====================
+  const isOnline = (userId) => onlineUsers.includes(userId);
+
   return (
     <div className="chat-app">
-      {/* ============ LEFT SIDEBAR ============ */}
       <aside className="chat-sidebar">
         <div className="brand">
           <img src={echoLogo} alt="Echo Chat" className="brand-logo" />
@@ -142,34 +93,60 @@ const HomePage = () => {
               }`}
               onClick={() => setSelectedUser(user)}
             >
-              <img src={user.profilePic} alt={user.fullName} />
+              <img
+                src={user.profilePic || "https://i.pravatar.cc/100"}
+                alt={user.fullName}
+              />
               <div className="user-info">
                 <strong>{user.fullName}</strong>
                 <span>
-                  <i></i>
-                  online
+                  <i
+                    style={{
+                      background: isOnline(user._id) ? "#16e58b" : "#666",
+                    }}
+                  ></i>
+                  {isOnline(user._id) ? "online" : "offline"}
                 </span>
               </div>
+              {unseenMessages[user._id] > 0 && (
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    background: "#7c4dff",
+                    color: "white",
+                    fontSize: "11px",
+                    padding: "2px 8px",
+                    borderRadius: "10px",
+                  }}
+                >
+                  {unseenMessages[user._id]}
+                </span>
+              )}
             </div>
           ))}
         </div>
       </aside>
 
-      {/* ============ CHAT MAIN ============ */}
       <main className="chat-main">
         {selectedUser ? (
           <>
             <header className="chat-header">
               <div className="current-user">
                 <img
-                  src={selectedUser.profilePic}
+                  src={selectedUser.profilePic || "https://i.pravatar.cc/100"}
                   alt={selectedUser.fullName}
                 />
                 <div>
                   <h3>{selectedUser.fullName}</h3>
                   <span>
-                    <i></i>
-                    Online
+                    <i
+                      style={{
+                        background: isOnline(selectedUser._id)
+                          ? "#16e58b"
+                          : "#666",
+                      }}
+                    ></i>
+                    {isOnline(selectedUser._id) ? "Online" : "Offline"}
                   </span>
                 </div>
               </div>
@@ -178,21 +155,32 @@ const HomePage = () => {
 
             <div className="messages">
               {messages.map((msg) => {
-                const isSent = msg.senderId === "me";
+                const isSent = msg.senderId === authUser?._id;
                 return (
                   <div
                     key={msg._id}
                     className={`message-row ${isSent ? "sent" : "received"}`}
                   >
-                    {!isSent && <img src={selectedUser.profilePic} alt="" />}
+                    {!isSent && (
+                      <img
+                        src={
+                          selectedUser.profilePic || "https://i.pravatar.cc/100"
+                        }
+                        alt=""
+                      />
+                    )}
                     <div>
-                      <div
-                        className={`message ${
-                          isSent ? "sent-message" : "received-message"
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
+                      {msg.image ? (
+                        <img src={msg.image} alt="" className="message-image" />
+                      ) : (
+                        <div
+                          className={`message ${
+                            isSent ? "sent-message" : "received-message"
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                      )}
                       <time>{formatTime(msg.createdAt)}</time>
                     </div>
                   </div>
@@ -234,20 +222,23 @@ const HomePage = () => {
         )}
       </main>
 
-      {/* ============ RIGHT SIDEBAR ============ */}
       <aside className="profile-sidebar">
         {selectedUser ? (
           <>
             <div className="profile">
               <div className="profile-avatar-wrapper">
                 <img
-                  src={selectedUser.profilePic}
+                  src={selectedUser.profilePic || "https://i.pravatar.cc/200"}
                   alt={selectedUser.fullName}
                 />
-                <span></span>
+                <span
+                  style={{
+                    background: isOnline(selectedUser._id) ? "#13dd83" : "#666",
+                  }}
+                ></span>
               </div>
               <h2>{selectedUser.fullName}</h2>
-              <p>Online</p>
+              <p>{isOnline(selectedUser._id) ? "Online" : "Offline"}</p>
               <div className="profile-line"></div>
               <p className="about">{selectedUser.bio}</p>
             </div>
@@ -255,22 +246,12 @@ const HomePage = () => {
             <div className="profile-section">
               <h4>Shared Media</h4>
               <div className="media-grid">
-                <img
-                  src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=300"
-                  alt=""
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300"
-                  alt=""
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=300"
-                  alt=""
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=300"
-                  alt=""
-                />
+                {messages
+                  .filter((msg) => msg.image)
+                  .slice(0, 4)
+                  .map((msg, i) => (
+                    <img key={i} src={msg.image} alt="" />
+                  ))}
               </div>
             </div>
 
