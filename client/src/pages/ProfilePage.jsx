@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { QRCodeSVG } from "qrcode.react";
+import toast from "react-hot-toast";
 import "../ProfilePage.css";
 
 const ProfilePage = () => {
@@ -42,7 +43,9 @@ const ProfilePage = () => {
   // Apply theme
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
+    window.dispatchEvent(new Event("themeChange"));
   }, [theme]);
 
   // Save notification settings
@@ -50,9 +53,14 @@ const ProfilePage = () => {
     localStorage.setItem("soundEnabled", JSON.stringify(soundEnabled));
   }, [soundEnabled]);
 
-  useEffect(() => {
-    localStorage.setItem("desktopNotif", JSON.stringify(desktopNotif));
-  }, [desktopNotif]);
+  const handleThemeChange = (themeId) => {
+  setTheme(themeId);
+  document.documentElement.setAttribute("data-theme", themeId);
+  document.body.setAttribute("data-theme", themeId);
+  localStorage.setItem("theme", themeId);
+  window.dispatchEvent(new Event("themeChange"));
+  toast.success(`Theme changed to ${themeId}!`);
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,7 +88,7 @@ const ProfilePage = () => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match!");
+      toast.error("New passwords do not match!");
       return;
     }
 
@@ -141,7 +149,6 @@ const ProfilePage = () => {
       <div className="profile-bg-blob profile-bg-blob-3"></div>
 
       <div className="profile-container">
-        {/* Header */}
         <div className="profile-header">
           <h1 className="profile-title">
             My <span>Profile</span>
@@ -151,7 +158,6 @@ const ProfilePage = () => {
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="profile-tabs">
           {["profile", "theme", "security", "notifications", "qr"].map(
             (tab) => (
@@ -172,9 +178,7 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* Profile Card */}
         <div className="profile-card">
-          {/* ========== TAB: PROFILE ========== */}
           {activeTab === "profile" && (
             <>
               <div className="profile-avatar-section">
@@ -313,7 +317,6 @@ const ProfilePage = () => {
             </>
           )}
 
-          {/* ========== TAB: THEME ========== */}
           {activeTab === "theme" && (
             <div className="profile-section">
               <h2 className="profile-section-title">🎨 Choose Your Theme</h2>
@@ -328,7 +331,7 @@ const ProfilePage = () => {
                     className={`profile-theme-btn ${
                       theme === t.id ? "active" : ""
                     }`}
-                    onClick={() => setTheme(t.id)}
+                    onClick={() => handleThemeChange(t.id)}
                   >
                     <div
                       className="profile-theme-color"
@@ -344,7 +347,6 @@ const ProfilePage = () => {
             </div>
           )}
 
-          {/* ========== TAB: SECURITY ========== */}
           {activeTab === "security" && (
             <div className="profile-section">
               <h2 className="profile-section-title">🔒 Change Password</h2>
@@ -398,7 +400,6 @@ const ProfilePage = () => {
             </div>
           )}
 
-          {/* ========== TAB: NOTIFICATIONS ========== */}
           {activeTab === "notifications" && (
             <div className="profile-section">
               <h2 className="profile-section-title">🔔 Notifications</h2>
@@ -446,7 +447,6 @@ const ProfilePage = () => {
             </div>
           )}
 
-          {/* ========== TAB: QR CODE ========== */}
           {activeTab === "qr" && (
             <div className="profile-section">
               <h2 className="profile-section-title">📱 My Profile QR</h2>

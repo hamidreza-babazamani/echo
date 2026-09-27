@@ -15,15 +15,31 @@ const HomePage = () => {
     setUnseenMessages,
     getMessages,
     sendMessage,
+    deleteMessage,
+    pinMessage,
   } = useChat();
 
   const [input, setInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [showMenu, setShowMenu] = useState(false);
+  const [openMessageMenu, setOpenMessageMenu] = useState(null);
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "violet");
 
   const scrollEnd = useRef();
 
-  // ==================== FILTER USERS ====================
+  useEffect(() => {
+    const updateTheme = () => {
+      setTheme(localStorage.getItem("theme") || "violet");
+    };
+    window.addEventListener("themeChange", updateTheme);
+    return () => window.removeEventListener("themeChange", updateTheme);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
+  }, [theme]);
+
   const filteredUsers = useMemo(() => {
     if (!searchInput) return users;
     return users.filter((u) =>
@@ -31,12 +47,15 @@ const HomePage = () => {
     );
   }, [searchInput, users]);
 
-  // ==================== AUTO SCROLL ====================
+  const pinnedMessages = useMemo(
+    () => messages.filter((m) => m.pinned),
+    [messages]
+  );
+
   useEffect(() => {
     scrollEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ==================== LOAD MESSAGES ====================
   useEffect(() => {
     if (selectedUser) {
       getMessages(selectedUser._id);
@@ -44,7 +63,6 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
-  // ==================== CLEAR UNSEEN ====================
   useEffect(() => {
     if (selectedUser) {
       setUnseenMessages((prev) => ({ ...prev, [selectedUser._id]: 0 }));
@@ -52,7 +70,15 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
-  // ==================== HANDLERS ====================
+  // Close message menu on outside click
+  useEffect(() => {
+    const closeMenu = () => setOpenMessageMenu(null);
+    if (openMessageMenu) {
+      document.addEventListener("click", closeMenu);
+      return () => document.removeEventListener("click", closeMenu);
+    }
+  }, [openMessageMenu]);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || !selectedUser) return;
@@ -80,16 +106,14 @@ const HomePage = () => {
 
   const isOnline = (userId) => onlineUsers.includes(userId);
 
-  // ==================== RENDER ====================
   return (
-    <div className="chat-app">
-      {/* ============ LEFT SIDEBAR ============ */}
+    <div className="chat-app" data-theme={theme}>
+      {/* ========== LEFT SIDEBAR ========== */}
       <aside className="chat-sidebar">
         <div className="brand">
           <img src={echoLogo} alt="Echo Chat" className="brand-logo" />
           <span>Echo Chat</span>
 
-          {/* Menu Button */}
           <div style={{ position: "relative", marginLeft: "auto" }}>
             <button
               className="more-btn"
@@ -127,12 +151,6 @@ const HomePage = () => {
                     borderRadius: "6px",
                     fontSize: "14px",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.target.style.background = "rgba(139,92,246,0.2)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.target.style.background = "transparent")
-                  }
                 >
                   👤 My Profile
                 </button>
@@ -158,12 +176,6 @@ const HomePage = () => {
                     borderRadius: "6px",
                     fontSize: "14px",
                   }}
-                  onMouseEnter={(e) =>
-                    (e.target.style.background = "rgba(255,107,107,0.15)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.target.style.background = "transparent")
-                  }
                 >
                   🚪 Logout
                 </button>
@@ -242,7 +254,7 @@ const HomePage = () => {
         </div>
       </aside>
 
-      {/* ============ CHAT MAIN ============ */}
+      {/* ========== CHAT MAIN ========== */}
       <main className="chat-main">
         {selectedUser ? (
           <>
@@ -269,6 +281,37 @@ const HomePage = () => {
               <button className="info-btn">ⓘ</button>
             </header>
 
+            {/* PINNED MESSAGES */}
+            {pinnedMessages.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 20px",
+                  background: "rgba(139, 92, 246, 0.15)",
+                  borderBottom: "1px solid rgba(139, 92, 246, 0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  fontSize: "13px",
+                  color: "white",
+                }}
+              >
+                <span style={{ fontSize: "16px" }}>📌</span>
+                <div
+                  style={{
+                    flex: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {pinnedMessages[pinnedMessages.length - 1].text || "📷 Image"}
+                </div>
+                <span style={{ fontSize: "11px", color: "#8892b8" }}>
+                  Pinned
+                </span>
+              </div>
+            )}
+
             <div className="messages">
               {messages.length === 0 ? (
                 <div
@@ -284,6 +327,8 @@ const HomePage = () => {
               ) : (
                 messages.map((msg) => {
                   const isSent = msg.senderId === authUser?._id;
+                  const isMenuOpen = openMessageMenu === msg._id;
+
                   return (
                     <div
                       key={msg._id}
@@ -298,7 +343,7 @@ const HomePage = () => {
                           alt=""
                         />
                       )}
-                      <div>
+                      <div style={{ position: "relative" }}>
                         {msg.image ? (
                           <img
                             src={msg.image}
@@ -310,11 +355,115 @@ const HomePage = () => {
                             className={`message ${
                               isSent ? "sent-message" : "received-message"
                             }`}
+                            style={{
+                              border: msg.pinned
+                                ? "2px solid #fbbf24"
+                                : "none",
+                            }}
                           >
                             {msg.text}
                           </div>
                         )}
                         <time>{formatTime(msg.createdAt)}</time>
+
+                        {/* Message Menu (only for own messages) */}
+                        {isSent && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMessageMenu(
+                                  isMenuOpen ? null : msg._id
+                                );
+                              }}
+                              style={{
+                                position: "absolute",
+                                [isSent ? "left" : "right"]: "-32px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                width: "26px",
+                                height: "26px",
+                                borderRadius: "50%",
+                                background: "rgba(255,255,255,0.08)",
+                                border: "1px solid rgba(255,255,255,0.15)",
+                                color: "white",
+                                cursor: "pointer",
+                                fontSize: "14px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                opacity: 0.7,
+                              }}
+                            >
+                              ⋮
+                            </button>
+
+                            {isMenuOpen && (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  position: "absolute",
+                                  [isSent ? "left" : "right"]: "-140px",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
+                                  background: "#1e1e2e",
+                                  border: "1px solid rgba(255,255,255,0.1)",
+                                  borderRadius: "10px",
+                                  padding: "6px",
+                                  zIndex: 50,
+                                  minWidth: "130px",
+                                  boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+                                }}
+                              >
+                                <button
+                                  onClick={() => {
+                                    pinMessage(msg._id);
+                                    setOpenMessageMenu(null);
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "white",
+                                    textAlign: "left",
+                                    cursor: "pointer",
+                                    borderRadius: "6px",
+                                    fontSize: "13px",
+                                    display: "flex",
+                                    gap: "8px",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  📌 {msg.pinned ? "Unpin" : "Pin"}
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    deleteMessage(msg._id);
+                                    setOpenMessageMenu(null);
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#ff6b6b",
+                                    textAlign: "left",
+                                    cursor: "pointer",
+                                    borderRadius: "6px",
+                                    fontSize: "13px",
+                                    display: "flex",
+                                    gap: "8px",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  🗑️ Delete
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   );
@@ -356,7 +505,7 @@ const HomePage = () => {
         )}
       </main>
 
-      {/* ============ RIGHT SIDEBAR ============ */}
+      {/* ========== RIGHT SIDEBAR ========== */}
       <aside className="profile-sidebar">
         {selectedUser ? (
           <>

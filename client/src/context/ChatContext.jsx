@@ -54,7 +54,41 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // ==================== SOCKET MESSAGES ====================
+  // ==================== DELETE MESSAGE ====================
+  const deleteMessage = async (messageId) => {
+    try {
+      const { data } = await axios.delete(`/api/messages/delete/${messageId}`);
+      if (data.success) {
+        setMessages((prev) => prev.filter((m) => m._id !== messageId));
+        toast.success("Message deleted");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // ==================== PIN MESSAGE ====================
+  const pinMessage = async (messageId) => {
+    try {
+      const { data } = await axios.put(`/api/messages/pin/${messageId}`);
+      if (data.success) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m._id === messageId ? { ...m, pinned: data.pinned } : m
+          )
+        );
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // ==================== SOCKET ====================
   useEffect(() => {
     if (!socket) return;
 
@@ -73,15 +107,29 @@ export const ChatProvider = ({ children }) => {
       }
     };
 
+    const handleMessageDeleted = ({ messageId }) => {
+      setMessages((prev) => prev.filter((m) => m._id !== messageId));
+    };
+
+    const handleMessagePinned = ({ messageId, pinned }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === messageId ? { ...m, pinned } : m))
+      );
+    };
+
     socket.on("newMessage", handleNewMessage);
+    socket.on("messageDeleted", handleMessageDeleted);
+    socket.on("messagePinned", handleMessagePinned);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
+      socket.off("messageDeleted", handleMessageDeleted);
+      socket.off("messagePinned", handleMessagePinned);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, selectedUser]);
 
-  // ==================== LOAD USERS ON AUTH ====================
+  // ==================== LOAD USERS ====================
   useEffect(() => {
     if (!authUser) return;
 
@@ -111,6 +159,8 @@ export const ChatProvider = ({ children }) => {
     getUsers,
     getMessages,
     sendMessage,
+    deleteMessage,
+    pinMessage,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

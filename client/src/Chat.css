@@ -1,3 +1,48 @@
+/* =========================================
+   THEME VARIABLES
+========================================= */
+
+:root,
+[data-theme="violet"] {
+    --theme-primary: #8b5cf6;
+    --theme-secondary: #a855f7;
+    --theme-accent: #a78bfa;
+}
+
+[data-theme="blue"] {
+    --theme-primary: #3b82f6;
+    --theme-secondary: #2563eb;
+    --theme-accent: #60a5fa;
+}
+
+[data-theme="pink"] {
+    --theme-primary: #ec4899;
+    --theme-secondary: #db2777;
+    --theme-accent: #f9a8d4;
+}
+
+[data-theme="green"] {
+    --theme-primary: #10b981;
+    --theme-secondary: #059669;
+    --theme-accent: #34d399;
+}
+
+[data-theme="orange"] {
+    --theme-primary: #f97316;
+    --theme-secondary: #ea580c;
+    --theme-accent: #fdba74;
+}
+
+[data-theme="red"] {
+    --theme-primary: #ef4444;
+    --theme-secondary: #dc2626;
+    --theme-accent: #fca5a5;
+}
+
+/* =========================================
+   RESET
+========================================= */
+
 * {
     box-sizing: border-box;
 }
@@ -9,9 +54,9 @@ body {
     color: white;
 }
 
-/* =================================
-   APP
-================================= */
+/* =========================================
+   APP + ANIMATED BACKGROUND
+========================================= */
 
 .chat-app {
     width: 100%;
@@ -19,29 +64,56 @@ body {
     display: grid;
     grid-template-columns: 300px minmax(400px, 1fr) 320px;
     overflow: hidden;
-    background:
-        radial-gradient(circle at 48% 40%, rgba(75, 53, 160, .16), transparent 35%),
-        radial-gradient(circle at 80% 20%, rgba(55, 80, 255, .10), transparent 30%),
-        #03050d;
+    position: relative;
+    background: #03050d;
 }
 
-/* =================================
+/* Static gradient background */
+.chat-app::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(circle at 15% 15%, var(--theme-primary), transparent 45%),
+        radial-gradient(circle at 85% 85%, var(--theme-secondary), transparent 45%),
+        radial-gradient(circle at 50% 50%, var(--theme-accent), transparent 65%),
+        #03050d;
+    opacity: 0.5;
+    filter: blur(90px);
+    pointer-events: none;
+}
+
+@keyframes bgPulse {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    100% {
+        transform: scale(1.15) rotate(5deg);
+    }
+}
+
+/* =========================================
    COMMON GLASS
-================================= */
+========================================= */
 
 .chat-sidebar,
 .chat-main,
 .profile-sidebar {
-    background: linear-gradient(145deg, rgba(18, 18, 35, .82), rgba(7, 8, 17, .88));
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(145deg, rgba(18, 18, 35, 0.7), rgba(7, 8, 17, 0.8));
     backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
 }
 
-/* =================================
+/* =========================================
    LEFT SIDEBAR
-================================= */
+========================================= */
 
 .chat-sidebar {
-    border-right: 1px solid rgba(255, 255, 255, .07);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
     padding: 24px 18px;
     display: flex;
     flex-direction: column;
@@ -57,13 +129,9 @@ body {
 .brand-logo {
     width: 40px;
     height: 40px;
-    border-radius: 13px;
-    display: grid;
-    place-items: center;
-    font-size: 21px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #4d8dff, #7d43ff, #dc65ff);
-    box-shadow: 0 0 25px rgba(100, 70, 255, .35);
+    object-fit: contain;
+    border-radius: 10px;
+    filter: drop-shadow(0 0 12px var(--theme-accent));
 }
 
 .brand span {
@@ -80,10 +148,7 @@ body {
     cursor: pointer;
 }
 
-/* =================================
-   SEARCH
-================================= */
-
+/* SEARCH */
 .search-box {
     height: 44px;
     display: flex;
@@ -91,8 +156,8 @@ body {
     gap: 9px;
     padding: 0 14px;
     border-radius: 12px;
-    background: rgba(72, 53, 130, .28);
-    border: 1px solid rgba(137, 113, 255, .15);
+    background: rgba(72, 53, 130, 0.28);
+    border: 1px solid rgba(137, 113, 255, 0.15);
 }
 
 .search-box span {
@@ -113,10 +178,7 @@ body {
     color: #85859a;
 }
 
-/* =================================
-   USERS
-================================= */
-
+/* USERS */
 .user-list {
     margin-top: 18px;
     overflow-y: auto;
@@ -130,15 +192,15 @@ body {
     margin-bottom: 3px;
     border-radius: 14px;
     cursor: pointer;
-    transition: .2s;
+    transition: 0.2s;
 }
 
 .user-item:hover {
-    background: rgba(100, 75, 200, .12);
+    background: rgba(100, 75, 200, 0.12);
 }
 
 .user-item.active {
-    background: linear-gradient(90deg, rgba(90, 65, 190, .18), transparent);
+    background: linear-gradient(90deg, var(--theme-primary), transparent);
 }
 
 .user-item img {
@@ -146,7 +208,7 @@ body {
     height: 46px;
     object-fit: cover;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, .08);
+    border: 2px solid rgba(255, 255, 255, 0.08);
 }
 
 .user-info {
@@ -176,12 +238,11 @@ body {
     display: inline-block;
 }
 
-/* =================================
+/* =========================================
    CHAT MAIN
-================================= */
+========================================= */
 
 .chat-main {
-    position: relative;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -193,7 +254,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, .07);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .current-user {
@@ -225,16 +286,16 @@ body {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, .08);
-    background: rgba(255, 255, 255, .03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
     color: #aaa;
     font-size: 18px;
     cursor: pointer;
 }
 
-/* =================================
+/* =========================================
    MESSAGES
-================================= */
+========================================= */
 
 .messages {
     flex: 1;
@@ -271,14 +332,14 @@ body {
 }
 
 .received-message {
-    background: rgba(53, 39, 105, .75);
+    background: rgba(53, 39, 105, 0.75);
     border-bottom-left-radius: 5px;
 }
 
 .sent-message {
-    background: linear-gradient(135deg, #466cff, #9246ff);
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
     border-bottom-right-radius: 5px;
-    box-shadow: 0 8px 25px rgba(79, 68, 255, .16);
+    box-shadow: 0 8px 25px rgba(79, 68, 255, 0.16);
 }
 
 .message-row time {
@@ -296,9 +357,9 @@ body {
     display: block;
 }
 
-/* =================================
+/* =========================================
    MESSAGE INPUT
-================================= */
+========================================= */
 
 .message-input {
     height: 68px;
@@ -308,8 +369,8 @@ body {
     gap: 8px;
     padding: 7px 8px 7px 14px;
     border-radius: 18px;
-    background: rgba(25, 25, 43, .9);
-    border: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(25, 25, 43, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .message-input input {
@@ -342,16 +403,16 @@ body {
     color: white;
     font-size: 17px;
     cursor: pointer;
-    background: linear-gradient(135deg, #4d7dff, #9748ff);
-    box-shadow: 0 5px 20px rgba(100, 70, 255, .3);
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+    box-shadow: 0 5px 20px rgba(100, 70, 255, 0.3);
 }
 
-/* =================================
-   PROFILE
-================================= */
+/* =========================================
+   PROFILE SIDEBAR
+========================================= */
 
 .profile-sidebar {
-    border-left: 1px solid rgba(255, 255, 255, .07);
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
     padding: 28px 20px;
     overflow-y: auto;
 }
@@ -370,8 +431,8 @@ body {
     height: 105px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, .1);
-    box-shadow: 0 0 35px rgba(80, 80, 255, .16);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 35px rgba(80, 80, 255, 0.16);
 }
 
 .profile-avatar-wrapper span {
@@ -399,7 +460,7 @@ body {
 .profile-line {
     height: 1px;
     margin: 22px 0;
-    background: rgba(255, 255, 255, .08);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .profile .about {
@@ -407,10 +468,7 @@ body {
     font-size: 13px;
 }
 
-/* =================================
-   MEDIA
-================================= */
-
+/* MEDIA */
 .profile-section {
     margin-top: 28px;
 }
@@ -432,8 +490,8 @@ body {
     height: 92px;
     object-fit: cover;
     border-radius: 10px;
-    opacity: .85;
-    transition: .2s;
+    opacity: 0.85;
+    transition: 0.2s;
 }
 
 .media-grid img:hover {
@@ -441,10 +499,7 @@ body {
     transform: scale(1.02);
 }
 
-/* =================================
-   LOGOUT
-================================= */
-
+/* LOGOUT */
 .logout-btn {
     width: 100%;
     margin-top: 25px;
@@ -452,31 +507,32 @@ body {
     border: 0;
     border-radius: 12px;
     color: white;
-    background: linear-gradient(135deg, #6845ff, #b14cff);
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
     cursor: pointer;
     font-size: 13px;
 }
 
-/* =================================
+/* =========================================
    SCROLLBAR
-================================= */
+========================================= */
 
 ::-webkit-scrollbar {
     width: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(125, 95, 255, .35);
+    background: var(--theme-primary);
     border-radius: 10px;
+    opacity: 0.5;
 }
 
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 
-/* =================================
-   RESPONSIVE - TABLET
-================================= */
+/* =========================================
+   RESPONSIVE
+========================================= */
 
 @media (max-width: 1000px) {
     .chat-app {
@@ -487,10 +543,6 @@ body {
         display: none;
     }
 }
-
-/* =================================
-   RESPONSIVE - MOBILE
-================================= */
 
 @media (max-width: 700px) {
     .chat-app {
