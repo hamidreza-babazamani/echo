@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
-// Set axios base URL once
 axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
 export const AuthProvider = ({ children }) => {
@@ -19,7 +18,6 @@ export const AuthProvider = ({ children }) => {
   // ==================== CONNECT SOCKET ====================
   const connectSocket = (userData) => {
     if (!userData || socket?.connected) return;
-
     const newSocket = io(backendUrl, {
       query: { userId: userData._id },
     });
@@ -31,7 +29,6 @@ export const AuthProvider = ({ children }) => {
   const login = async (state, credentials) => {
     try {
       const { data } = await axios.post(`/api/auth/${state}`, credentials);
-
       if (data.success) {
         setAuthUser(data.userData);
         connectSocket(data.userData);
@@ -65,7 +62,6 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (body) => {
     try {
       const { data } = await axios.put("/api/auth/update-profile", body);
-
       if (data.success) {
         setAuthUser(data.user);
         toast.success("Profile updated successfully");
@@ -77,14 +73,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ==================== CHECK AUTH ON MOUNT ====================
+  // ==================== GET USER STATS ====================
+  const getStats = async () => {
+    try {
+      const { data } = await axios.get("/api/auth/stats");
+      if (data.success) return data.stats;
+      return null;
+    } catch (error) {
+      console.log(error.message);
+      return null;
+    }
+  };
+
+  // ==================== CHANGE PASSWORD ====================
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const { data } = await axios.put("/api/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      if (data.success) {
+        toast.success(data.message);
+        return true;
+      } else {
+        toast.error(data.message);
+        return false;
+      }
+    } catch (error) {
+      toast.error(error.message);
+      return false;
+    }
+  };
+
+  // ==================== CHECK AUTH ====================
   useEffect(() => {
     const init = async () => {
       try {
         if (token) {
           axios.defaults.headers.common["token"] = token;
         }
-
         const { data } = await axios.get("/api/auth/check");
         if (data.success) {
           setAuthUser(data.user);
@@ -98,14 +125,12 @@ export const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ==================== SOCKET LISTENERS ====================
+  // ==================== SOCKET ====================
   useEffect(() => {
     if (!socket) return;
-
     socket.on("getOnlineUsers", (userIds) => {
       setOnlineUsers(userIds);
     });
-
     return () => {
       socket.off("getOnlineUsers");
     };
@@ -119,6 +144,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateProfile,
+    getStats,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
