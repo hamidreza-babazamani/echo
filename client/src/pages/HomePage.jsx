@@ -19,8 +19,11 @@ const HomePage = () => {
 
   const [input, setInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+
   const scrollEnd = useRef();
 
+  // ==================== FILTER USERS ====================
   const filteredUsers = useMemo(() => {
     if (!searchInput) return users;
     return users.filter((u) =>
@@ -28,15 +31,20 @@ const HomePage = () => {
     );
   }, [searchInput, users]);
 
+  // ==================== AUTO SCROLL ====================
   useEffect(() => {
     scrollEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ==================== LOAD MESSAGES ====================
   useEffect(() => {
-    if (selectedUser) getMessages(selectedUser._id);
+    if (selectedUser) {
+      getMessages(selectedUser._id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
+  // ==================== CLEAR UNSEEN ====================
   useEffect(() => {
     if (selectedUser) {
       setUnseenMessages((prev) => ({ ...prev, [selectedUser._id]: 0 }));
@@ -44,9 +52,11 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
+  // ==================== HANDLERS ====================
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || !selectedUser) return;
+
     await sendMessage({ text: input.trim() });
     setInput("");
   };
@@ -56,22 +66,110 @@ const HomePage = () => {
     window.location.href = "/login";
   };
 
-  const formatTime = (date) =>
-    new Date(date).toLocaleTimeString("en-US", {
+  const goToProfile = () => {
+    window.location.href = "/profile";
+  };
+
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
+  };
 
   const isOnline = (userId) => onlineUsers.includes(userId);
 
+  // ==================== RENDER ====================
   return (
     <div className="chat-app">
+      {/* ============ LEFT SIDEBAR ============ */}
       <aside className="chat-sidebar">
         <div className="brand">
           <img src={echoLogo} alt="Echo Chat" className="brand-logo" />
           <span>Echo Chat</span>
-          <button className="more-btn">⋮</button>
+
+          {/* Menu Button */}
+          <div style={{ position: "relative", marginLeft: "auto" }}>
+            <button
+              className="more-btn"
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              ⋮
+            </button>
+
+            {showMenu && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  background: "#282142",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "10px",
+                  padding: "8px",
+                  minWidth: "180px",
+                  zIndex: 100,
+                  marginTop: "8px",
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+                }}
+              >
+                <button
+                  onClick={goToProfile}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "transparent",
+                    border: "none",
+                    color: "white",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.target.style.background = "rgba(139,92,246,0.2)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.style.background = "transparent")
+                  }
+                >
+                  👤 My Profile
+                </button>
+
+                <div
+                  style={{
+                    height: "1px",
+                    background: "rgba(255,255,255,0.1)",
+                    margin: "4px 0",
+                  }}
+                ></div>
+
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "transparent",
+                    border: "none",
+                    color: "#ff6b6b",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.target.style.background = "rgba(255,107,107,0.15)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.style.background = "transparent")
+                  }
+                >
+                  🚪 Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="search-box">
@@ -85,48 +183,66 @@ const HomePage = () => {
         </div>
 
         <div className="user-list">
-          {filteredUsers.map((user) => (
-            <div
-              key={user._id}
-              className={`user-item ${
-                selectedUser?._id === user._id ? "active" : ""
-              }`}
-              onClick={() => setSelectedUser(user)}
+          {filteredUsers.length === 0 ? (
+            <p
+              style={{
+                textAlign: "center",
+                color: "#666",
+                marginTop: "20px",
+                fontSize: "13px",
+              }}
             >
-              <img
-                src={user.profilePic || "https://i.pravatar.cc/100"}
-                alt={user.fullName}
-              />
-              <div className="user-info">
-                <strong>{user.fullName}</strong>
-                <span>
-                  <i
+              No users found
+            </p>
+          ) : (
+            filteredUsers.map((user) => (
+              <div
+                key={user._id}
+                className={`user-item ${
+                  selectedUser?._id === user._id ? "active" : ""
+                }`}
+                onClick={() => {
+                  setSelectedUser(user);
+                  setShowMenu(false);
+                }}
+              >
+                <img
+                  src={user.profilePic || "https://i.pravatar.cc/100"}
+                  alt={user.fullName}
+                />
+                <div className="user-info">
+                  <strong>{user.fullName}</strong>
+                  <span>
+                    <i
+                      style={{
+                        background: isOnline(user._id) ? "#16e58b" : "#666",
+                      }}
+                    ></i>
+                    {isOnline(user._id) ? "online" : "offline"}
+                  </span>
+                </div>
+
+                {unseenMessages[user._id] > 0 && (
+                  <span
                     style={{
-                      background: isOnline(user._id) ? "#16e58b" : "#666",
+                      marginLeft: "auto",
+                      background: "#7c4dff",
+                      color: "white",
+                      fontSize: "11px",
+                      padding: "2px 8px",
+                      borderRadius: "10px",
                     }}
-                  ></i>
-                  {isOnline(user._id) ? "online" : "offline"}
-                </span>
+                  >
+                    {unseenMessages[user._id]}
+                  </span>
+                )}
               </div>
-              {unseenMessages[user._id] > 0 && (
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    background: "#7c4dff",
-                    color: "white",
-                    fontSize: "11px",
-                    padding: "2px 8px",
-                    borderRadius: "10px",
-                  }}
-                >
-                  {unseenMessages[user._id]}
-                </span>
-              )}
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </aside>
 
+      {/* ============ CHAT MAIN ============ */}
       <main className="chat-main">
         {selectedUser ? (
           <>
@@ -154,38 +270,56 @@ const HomePage = () => {
             </header>
 
             <div className="messages">
-              {messages.map((msg) => {
-                const isSent = msg.senderId === authUser?._id;
-                return (
-                  <div
-                    key={msg._id}
-                    className={`message-row ${isSent ? "sent" : "received"}`}
-                  >
-                    {!isSent && (
-                      <img
-                        src={
-                          selectedUser.profilePic || "https://i.pravatar.cc/100"
-                        }
-                        alt=""
-                      />
-                    )}
-                    <div>
-                      {msg.image ? (
-                        <img src={msg.image} alt="" className="message-image" />
-                      ) : (
-                        <div
-                          className={`message ${
-                            isSent ? "sent-message" : "received-message"
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
+              {messages.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#666",
+                    marginTop: "40px",
+                    fontSize: "14px",
+                  }}
+                >
+                  No messages yet. Start the conversation!
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isSent = msg.senderId === authUser?._id;
+                  return (
+                    <div
+                      key={msg._id}
+                      className={`message-row ${isSent ? "sent" : "received"}`}
+                    >
+                      {!isSent && (
+                        <img
+                          src={
+                            selectedUser.profilePic ||
+                            "https://i.pravatar.cc/100"
+                          }
+                          alt=""
+                        />
                       )}
-                      <time>{formatTime(msg.createdAt)}</time>
+                      <div>
+                        {msg.image ? (
+                          <img
+                            src={msg.image}
+                            alt=""
+                            className="message-image"
+                          />
+                        ) : (
+                          <div
+                            className={`message ${
+                              isSent ? "sent-message" : "received-message"
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                        )}
+                        <time>{formatTime(msg.createdAt)}</time>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
               <div ref={scrollEnd}></div>
             </div>
 
@@ -222,6 +356,7 @@ const HomePage = () => {
         )}
       </main>
 
+      {/* ============ RIGHT SIDEBAR ============ */}
       <aside className="profile-sidebar">
         {selectedUser ? (
           <>
@@ -240,18 +375,30 @@ const HomePage = () => {
               <h2>{selectedUser.fullName}</h2>
               <p>{isOnline(selectedUser._id) ? "Online" : "Offline"}</p>
               <div className="profile-line"></div>
-              <p className="about">{selectedUser.bio}</p>
+              <p className="about">{selectedUser.bio || "No bio yet"}</p>
             </div>
 
             <div className="profile-section">
               <h4>Shared Media</h4>
               <div className="media-grid">
-                {messages
-                  .filter((msg) => msg.image)
-                  .slice(0, 4)
-                  .map((msg, i) => (
-                    <img key={i} src={msg.image} alt="" />
-                  ))}
+                {messages.filter((msg) => msg.image).length === 0 ? (
+                  <p
+                    style={{
+                      color: "#666",
+                      fontSize: "12px",
+                      gridColumn: "span 2",
+                    }}
+                  >
+                    No media shared yet
+                  </p>
+                ) : (
+                  messages
+                    .filter((msg) => msg.image)
+                    .slice(0, 4)
+                    .map((msg, i) => (
+                      <img key={i} src={msg.image} alt="" />
+                    ))
+                )}
               </div>
             </div>
 
@@ -260,7 +407,9 @@ const HomePage = () => {
             </button>
           </>
         ) : (
-          <div style={{ textAlign: "center", color: "#666", marginTop: "40px" }}>
+          <div
+            style={{ textAlign: "center", color: "#666", marginTop: "40px" }}
+          >
             No user selected
           </div>
         )}

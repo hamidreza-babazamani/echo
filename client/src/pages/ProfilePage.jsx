@@ -1,89 +1,151 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import assets from '../assets/assets'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const ProfilePage = () => {
-  const [selectedImg, setSelectedImg] = useState(null)
-  const [name, setName] = useState("Martin Johnson")
-  const [bio, setBio] = useState("Hi Everyone, I am Using QuickChat")
-  const navigate = useNavigate()
+  const { authUser, updateProfile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const [selectedImg, setSelectedImg] = useState(null);
+  const [name, setName] = useState(authUser?.fullName || "");
+  const [bio, setBio] = useState(authUser?.bio || "");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    navigate('/')
-  }
+    e.preventDefault();
+    setLoading(true);
+
+    if (!selectedImg) {
+      await updateProfile({ fullName: name, bio });
+    } else {
+      const reader = new FileReader();
+      reader.readAsDataURL(selectedImg);
+      reader.onload = async () => {
+        await updateProfile({
+          profilePic: reader.result,
+          fullName: name,
+          bio,
+        });
+      };
+    }
+
+    setLoading(false);
+    navigate("/");
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/login";
+  };
 
   return (
-    <div className="min-h-screen bg-cover bg-no-repeat flex items-center justify-center">
-      <div className="w-5/6 max-w-2xl backdrop-blur-2xl text-gray-300 border-2 border-gray-600 flex items-center justify-between max-sm:flex-col-reverse rounded-lg">
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-5 p-10 flex-1"
-        >
-          <h3 className="text-lg">Profile details</h3>
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1e] via-[#2d1b4e] to-[#1a1a2e] flex items-center justify-center p-6">
+      <div className="w-full max-w-2xl bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-10 text-white shadow-2xl">
 
-          {/* Avatar Upload */}
-          <label
-            htmlFor="avatar"
-            className="flex items-center gap-3 cursor-pointer"
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">
+            My <span className="text-violet-400">Profile</span>
+          </h1>
+          <button
+            onClick={() => navigate("/")}
+            className="text-sm text-violet-400 hover:text-violet-300"
           >
-            <input
-              onChange={(e) => setSelectedImg(e.target.files[0])}
-              type="file"
-              id="avatar"
-              accept=".png,.jpg,.jpeg"
-              hidden
-            />
-            <img
-              src={
-                selectedImg
-                  ? URL.createObjectURL(selectedImg)
-                  : assets.avatar_icon
-              }
-              alt=""
-              className={`w-12 h-12 ${selectedImg && 'rounded-full'}`}
-            />
-            Upload profile image
-          </label>
+            ← Back to Chat
+          </button>
+        </div>
+
+        {/* Current User Info */}
+        <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-4 mb-8">
+          <p className="text-sm text-gray-300 mb-1">Logged in as:</p>
+          <p className="font-semibold text-lg">{authUser?.fullName}</p>
+          <p className="text-sm text-violet-300">{authUser?.email}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            ID: {authUser?._id?.slice(-8)}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Avatar */}
+          <div className="flex flex-col items-center gap-4">
+            <label htmlFor="avatar" className="cursor-pointer group">
+              <input
+                type="file"
+                id="avatar"
+                accept="image/*"
+                onChange={(e) => setSelectedImg(e.target.files[0])}
+                hidden
+              />
+              <div className="relative">
+                <img
+                  src={
+                    selectedImg
+                      ? URL.createObjectURL(selectedImg)
+                      : authUser?.profilePic ||
+                        "https://i.pravatar.cc/200"
+                  }
+                  alt="Profile"
+                  className="w-28 h-28 rounded-full object-cover border-4 border-violet-500/30 group-hover:border-violet-500 transition"
+                />
+                <div className="absolute bottom-0 right-0 w-9 h-9 bg-violet-500 rounded-full flex items-center justify-center text-white text-lg shadow-lg">
+                  ✎
+                </div>
+              </div>
+            </label>
+            <p className="text-xs text-gray-400">Click to change avatar</p>
+          </div>
 
           {/* Name */}
-          <input
-            onChange={(e) => setName(e.target.value)}
-            value={name}
-            type="text"
-            required
-            placeholder="Your name"
-            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
-          />
+          <div>
+            <label className="block text-sm mb-2 text-gray-300">
+              Full Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Your name"
+              className="w-full p-3 bg-white/5 border border-white/20 rounded-lg outline-none focus:border-violet-500 text-white placeholder-gray-500 transition"
+            />
+          </div>
 
           {/* Bio */}
-          <textarea
-            onChange={(e) => setBio(e.target.value)}
-            value={bio}
-            placeholder="Write profile bio"
-            required
-            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
-            rows={4}
-          ></textarea>
+          <div>
+            <label className="block text-sm mb-2 text-gray-300">Bio</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              required
+              rows={4}
+              placeholder="Write something about yourself..."
+              className="w-full p-3 bg-white/5 border border-white/20 rounded-lg outline-none focus:border-violet-500 text-white placeholder-gray-500 resize-none transition"
+            ></textarea>
+          </div>
 
-          <button
-            type="submit"
-            className="bg-gradient-to-r from-purple-400 to-violet-600 text-white p-2 rounded-full text-lg cursor-pointer"
-          >
-            Save
-          </button>
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg font-semibold hover:from-violet-600 hover:to-purple-700 transition disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-6 py-3 bg-red-500/20 border border-red-500/40 text-red-300 rounded-lg font-semibold hover:bg-red-500/30 transition"
+            >
+              Logout
+            </button>
+          </div>
         </form>
-
-        {/* Preview Image */}
-        <img
-          className="max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10"
-          src={assets.logo_icon}
-          alt=""
-        />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProfilePage
+export default ProfilePage;

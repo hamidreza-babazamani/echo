@@ -29,26 +29,26 @@ export const AuthProvider = ({ children }) => {
 
   // ==================== LOGIN / SIGNUP ====================
   const login = async (state, credentials) => {
-  try {
-    const { data } = await axios.post(`/api/auth/${state}`, credentials);
+    try {
+      const { data } = await axios.post(`/api/auth/${state}`, credentials);
 
-    if (data.success) {
-      setAuthUser(data.userData);
-      connectSocket(data.userData);
-      axios.defaults.headers.common["token"] = data.token;
-      setToken(data.token);
-      localStorage.setItem("token", data.token);
-      toast.success(data.message);
-      return true;
-    } else {
-      toast.error(data.message);
+      if (data.success) {
+        setAuthUser(data.userData);
+        connectSocket(data.userData);
+        axios.defaults.headers.common["token"] = data.token;
+        setToken(data.token);
+        localStorage.setItem("token", data.token);
+        toast.success(data.message);
+        return true;
+      } else {
+        toast.error(data.message);
+        return false;
+      }
+    } catch (error) {
+      toast.error(error.message);
       return false;
     }
-  } catch (error) {
-    toast.error(error.message);
-    return false;
-  }
-};
+  };
 
   // ==================== LOGOUT ====================
   const logout = async () => {
@@ -69,9 +69,11 @@ export const AuthProvider = ({ children }) => {
       if (data.success) {
         setAuthUser(data.user);
         toast.success("Profile updated successfully");
+        return true;
       }
     } catch (error) {
       toast.error(error.message);
+      return false;
     }
   };
 

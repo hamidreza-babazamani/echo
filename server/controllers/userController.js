@@ -75,3 +75,38 @@ export const login = async (req, res) => {
 export const checkAuth = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
+
+// ==================== GET PROFILE ====================
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ==================== UPDATE PROFILE ====================
+export const updateProfile = async (req, res) => {
+  try {
+    const { profilePic, bio, fullName } = req.body;
+    const userId = req.user._id;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePic, bio, fullName },
+      { new: true },
+    ).select("-password");
+
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
