@@ -10,7 +10,6 @@ import SettingsPage from "./pages/SettingsPage";
 const ProtectedRoute = ({ children }) => {
   const { authUser, token } = useAuth();
 
-  // اگه توکن هست ولی authUser هنوز لود نشده، صبر کن
   if (token && !authUser) {
     return (
       <div
@@ -29,21 +28,8 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // اگه authUser نیست، برو Login
   if (!authUser) {
     return <Navigate to="/login" replace />;
-  }
-
-  return children;
-};
-
-// ==================== PUBLIC ROUTE (Login) ====================
-const PublicRoute = ({ children }) => {
-  const { authUser, token } = useAuth();
-
-  // اگه کاربر لاگینـه، برو HomePage
-  if (authUser || token) {
-    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -81,17 +67,10 @@ const App = () => {
           }
         />
 
-        {/* Public Route */}
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
+        {/* Login Route (Public) */}
+        <Route path="/login" element={<LoginPage />} />
 
-        {/* Catch all → Login */}
+        {/* Catch all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>
