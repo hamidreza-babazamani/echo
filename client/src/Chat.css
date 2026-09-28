@@ -508,6 +508,7 @@ input {
     cursor: pointer;
     border-radius: 6px;
     font-size: 13px;
+    font-family: inherit;
 }
 
 .message .msg-menu button:hover {
@@ -533,7 +534,6 @@ input {
     height: 34px;
     border-radius: 50%;
     cursor: pointer;
-    border: 0;
     font-size: 16px;
 }
 
@@ -554,6 +554,7 @@ input {
 .composer .send {
     background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
     color: #fff;
+    border: 0;
 }
 
 .no-user {
@@ -580,7 +581,6 @@ input {
     margin: -18px -18px 0;
     background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
     opacity: 0.6;
-    border-radius: 0;
 }
 
 .profile-avatar {
@@ -721,12 +721,13 @@ input {
 }
 
 /* =========================================
-   RESPONSIVE
+   RESPONSIVE - TABLET
 ========================================= */
 
 @media (max-width: 1050px) {
     .app-shell {
         grid-template-columns: 170px 240px 1fr;
+        height: 94vh;
     }
 
     .profile-panel {
@@ -734,19 +735,178 @@ input {
     }
 }
 
+/* =========================================
+   RESPONSIVE - MOBILE
+========================================= */
+
 @media (max-width: 760px) {
-    .app-shell {
-        grid-template-columns: 1fr;
-        height: 96vh;
-        margin: 2vh auto;
+    body {
+        overflow-x: hidden;
     }
 
-    .sidebar,
-    .conversation-list {
+    .app-shell {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        border-radius: 0;
+        border: 0;
+        overflow-y: auto;
+    }
+
+    /* NAV SIDEBAR - Horizontal */
+    .sidebar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px 12px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow-x: auto;
+        gap: 8px;
+        height: auto;
+        min-height: auto;
+    }
+
+    .sidebar .brand {
+        margin-bottom: 0;
+        flex-shrink: 0;
+        gap: 6px;
+    }
+
+    .sidebar .brand-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .sidebar .brand b {
+        font-size: 13px;
+    }
+
+    .sidebar nav {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: auto;
+    }
+
+    .sidebar .nav-item {
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 8px;
+    }
+
+    .sidebar .nav-item span:last-child {
         display: none;
+    }
+
+    .sidebar .nav-item span:first-child {
+        font-size: 16px;
+    }
+
+    .sidebar .online-title,
+    .sidebar .online-list,
+    .sidebar .sidebar-footer {
+        display: none;
+    }
+
+    /* CONVERSATION LIST */
+    .conversation-list {
+        display: block;
+        max-height: 240px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 10px;
+    }
+
+    .conversation-list .search input {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    .conversation-list .chat {
+        padding: 8px 6px;
+    }
+
+    .conversation-list .chat img {
+        width: 34px;
+        height: 34px;
+    }
+
+    .conversation-list .chat b {
+        font-size: 12px;
+    }
+
+    /* CHAT PANEL */
+    .chat-panel {
+        min-height: 60vh;
+    }
+
+    .chat-header {
+        padding: 10px 14px;
+        height: 60px;
+    }
+
+    .chat-header img {
+        width: 36px;
+        height: 36px;
+    }
+
+    .chat-header b {
+        font-size: 13px;
+    }
+
+    .header-actions button {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .messages {
+        padding: 14px 12px;
     }
 
     .message {
         max-width: 82%;
+        font-size: 12px;
+    }
+
+    .message .msg-menu-btn {
+        left: -28px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .message .msg-menu {
+        left: -130px;
+    }
+
+    .composer {
+        margin: 8px 12px 12px;
+    }
+
+    /* PROFILE PANEL */
+    .profile-panel {
+        display: none;
+    }
+}
+
+/* =========================================
+   RESPONSIVE - SMALL MOBILE
+========================================= */
+
+@media (max-width: 430px) {
+    .conversation-list {
+        max-height: 200px;
+    }
+
+    .chat-header small {
+        font-size: 9px;
+    }
+
+    .composer button {
+        width: 30px;
+        height: 30px;
     }
 }
