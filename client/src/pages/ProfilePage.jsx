@@ -5,6 +5,8 @@ import { QRCodeSVG } from "qrcode.react";
 import toast from "react-hot-toast";
 import "../ProfilePage.css";
 
+const Icon = ({ children }) => <span className="icon">{children}</span>;
+
 const ProfilePage = () => {
   const { authUser, updateProfile, logout, getStats, changePassword } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +20,6 @@ const ProfilePage = () => {
   const [stats, setStats] = useState(null);
 
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "violet");
-
   const [soundEnabled, setSoundEnabled] = useState(
     JSON.parse(localStorage.getItem("soundEnabled") ?? "true")
   );
@@ -40,7 +41,7 @@ const ProfilePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Apply theme
+  // Theme
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     document.body.setAttribute("data-theme", theme);
@@ -48,19 +49,13 @@ const ProfilePage = () => {
     window.dispatchEvent(new Event("themeChange"));
   }, [theme]);
 
-  // Save notification settings
   useEffect(() => {
     localStorage.setItem("soundEnabled", JSON.stringify(soundEnabled));
   }, [soundEnabled]);
 
-  const handleThemeChange = (themeId) => {
-  setTheme(themeId);
-  document.documentElement.setAttribute("data-theme", themeId);
-  document.body.setAttribute("data-theme", themeId);
-  localStorage.setItem("theme", themeId);
-  window.dispatchEvent(new Event("themeChange"));
-  toast.success(`Theme changed to ${themeId}!`);
-};
+  useEffect(() => {
+    localStorage.setItem("desktopNotif", JSON.stringify(desktopNotif));
+  }, [desktopNotif]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,12 +81,10 @@ const ProfilePage = () => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-
     if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match!");
       return;
     }
-
     const success = await changePassword(currentPassword, newPassword);
     if (success) {
       setCurrentPassword("");
@@ -105,9 +98,19 @@ const ProfilePage = () => {
     window.location.href = "/login";
   };
 
+  const handleThemeChange = (themeId) => {
+    setTheme(themeId);
+    document.documentElement.setAttribute("data-theme", themeId);
+    document.body.setAttribute("data-theme", themeId);
+    localStorage.setItem("theme", themeId);
+    window.dispatchEvent(new Event("themeChange"));
+    toast.success(`Theme: ${themeId}`);
+  };
+
   const copyId = () => {
     navigator.clipboard.writeText(authUser?._id);
     setCopied(true);
+    toast.success("ID copied!");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -133,6 +136,14 @@ const ProfilePage = () => {
     return `${days}d ago`;
   };
 
+  const tabs = [
+    { id: "profile", label: "Profile", icon: "👤" },
+    { id: "theme", label: "Theme", icon: "🎨" },
+    { id: "security", label: "Security", icon: "🔒" },
+    { id: "notifications", label: "Notifications", icon: "🔔" },
+    { id: "qr", label: "QR Code", icon: "▦" },
+  ];
+
   const themes = [
     { id: "violet", color: "#8b5cf6", label: "Violet" },
     { id: "blue", color: "#3b82f6", label: "Blue" },
@@ -142,174 +153,201 @@ const ProfilePage = () => {
     { id: "red", color: "#ef4444", label: "Red" },
   ];
 
+  const username = authUser?.email?.split("@")[0] || "";
+
   return (
     <div className="profile-page">
-      <div className="profile-bg-blob profile-bg-blob-1"></div>
-      <div className="profile-bg-blob profile-bg-blob-2"></div>
-      <div className="profile-bg-blob profile-bg-blob-3"></div>
+      <div className="profile-glow glow-one" />
+      <div className="profile-glow glow-two" />
 
       <div className="profile-container">
-        <div className="profile-header">
-          <h1 className="profile-title">
-            My <span>Profile</span>
-          </h1>
-          <button onClick={() => navigate("/")} className="profile-back-btn">
-            ← Back to Chat
-          </button>
-        </div>
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/")}
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: "rgba(12, 27, 58, 0.72)",
+            border: "1px solid rgba(104, 132, 190, 0.2)",
+            color: "#8e9fbe",
+            padding: "8px 14px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize: "11px",
+            fontWeight: "600",
+            zIndex: 10,
+          }}
+        >
+          ← Back
+        </button>
 
+        {/* Tabs */}
         <div className="profile-tabs">
-          {["profile", "theme", "security", "notifications", "qr"].map(
-            (tab) => (
-              <button
-                key={tab}
-                className={`profile-tab ${
-                  activeTab === tab ? "active" : ""
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "profile" && "👤 Profile"}
-                {tab === "theme" && "🎨 Theme"}
-                {tab === "security" && "🔒 Security"}
-                {tab === "notifications" && "🔔 Notifications"}
-                {tab === "qr" && "📱 QR Code"}
-              </button>
-            )
-          )}
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`profile-tab ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
 
+        {/* Main Card */}
         <div className="profile-card">
+          {/* ===== TAB: PROFILE ===== */}
           {activeTab === "profile" && (
             <>
-              <div className="profile-avatar-section">
-                <label htmlFor="avatar" className="profile-avatar-label">
-                  <input
-                    type="file"
-                    id="avatar"
-                    accept="image/*"
-                    onChange={(e) => setSelectedImg(e.target.files[0])}
-                    hidden
+              {/* Header */}
+              <div className="profile-header">
+                <div className="avatar-wrapper">
+                  <img
+                    src={
+                      selectedImg
+                        ? URL.createObjectURL(selectedImg)
+                        : authUser?.profilePic || "https://i.pravatar.cc/300?img=12"
+                    }
+                    alt="Profile"
+                    className="profile-avatar"
                   />
-                  <div className="profile-avatar-wrapper">
-                    <img
-                      src={
-                        selectedImg
-                          ? URL.createObjectURL(selectedImg)
-                          : authUser?.profilePic || "https://i.pravatar.cc/200"
-                      }
-                      alt="Profile"
-                      className="profile-avatar-img"
+                  <label htmlFor="avatar" style={{ cursor: "pointer" }}>
+                    <input
+                      type="file"
+                      id="avatar"
+                      accept="image/*"
+                      onChange={(e) => setSelectedImg(e.target.files[0])}
+                      hidden
                     />
-                    <div className="profile-avatar-edit">✎</div>
-                    <div className="profile-avatar-ring"></div>
-                  </div>
-                </label>
-                <p className="profile-avatar-hint">Click to change avatar</p>
+                    <div className="avatar-edit">✎</div>
+                  </label>
+                </div>
+
+                <div className="profile-name">{authUser?.fullName}</div>
+                <div className="profile-handle">@{username}</div>
+
+                <div className="online-status">
+                  <span />
+                  Online
+                </div>
               </div>
 
+              {/* Stats */}
               <div className="profile-stats">
-                <div className="profile-stat">
-                  <div className="profile-stat-icon">📤</div>
-                  <div className="profile-stat-value">
-                    {stats?.messagesSent ?? "—"}
-                  </div>
-                  <div className="profile-stat-label">Sent</div>
+                <div className="stat-card">
+                  <div className="stat-icon sent">↑</div>
+                  <strong>{stats?.messagesSent ?? 0}</strong>
+                  <span>SENT</span>
                 </div>
-                <div className="profile-stat">
-                  <div className="profile-stat-icon">📥</div>
-                  <div className="profile-stat-value">
-                    {stats?.messagesReceived ?? "—"}
-                  </div>
-                  <div className="profile-stat-label">Received</div>
+                <div className="stat-card">
+                  <div className="stat-icon received">↓</div>
+                  <strong>{stats?.messagesReceived ?? 0}</strong>
+                  <span>RECEIVED</span>
                 </div>
-                <div className="profile-stat">
-                  <div className="profile-stat-icon">💬</div>
-                  <div className="profile-stat-value">
-                    {stats?.totalChats ?? "—"}
-                  </div>
-                  <div className="profile-stat-label">Chats</div>
+                <div className="stat-card">
+                  <div className="stat-icon chats">💬</div>
+                  <strong>{stats?.totalChats ?? 0}</strong>
+                  <span>CHATS</span>
                 </div>
               </div>
 
-              <div className="profile-info-box">
-                <div className="profile-info-row">
-                  <div className="profile-info-label">👤 Name</div>
-                  <div className="profile-info-value">
-                    {authUser?.fullName}
+              {/* Info */}
+              <div className="info-card">
+                <div className="info-row">
+                  <div className="info-label">
+                    <Icon>👤</Icon>
+                    <span>Name</span>
                   </div>
+                  <strong>{authUser?.fullName}</strong>
                 </div>
-                <div className="profile-info-row">
-                  <div className="profile-info-label">📧 Email</div>
-                  <div className="profile-info-value">{authUser?.email}</div>
+
+                <div className="info-row">
+                  <div className="info-label">
+                    <Icon>✉</Icon>
+                    <span>Email</span>
+                  </div>
+                  <strong>{authUser?.email}</strong>
                 </div>
-                <div className="profile-info-row">
-                  <div className="profile-info-label">🆔 User ID</div>
-                  <div className="profile-info-value profile-id-value">
-                    <span>{authUser?._id?.slice(-12)}</span>
-                    <button onClick={copyId} className="profile-copy-btn">
+
+                <div className="info-row">
+                  <div className="info-label">
+                    <Icon>▣</Icon>
+                    <span>User ID</span>
+                  </div>
+                  <div className="user-id">
+                    <strong>{authUser?._id?.slice(-12)}</strong>
+                    <button onClick={copyId}>
                       {copied ? "✓ Copied" : "Copy"}
                     </button>
                   </div>
                 </div>
-                <div className="profile-info-row">
-                  <div className="profile-info-label">📅 Joined</div>
-                  <div className="profile-info-value">
-                    {formatDate(authUser?.createdAt)}
+
+                <div className="info-row">
+                  <div className="info-label">
+                    <Icon>📅</Icon>
+                    <span>Joined</span>
                   </div>
+                  <strong>{formatDate(authUser?.createdAt)}</strong>
                 </div>
-                <div className="profile-info-row">
-                  <div className="profile-info-label">🕐 Last Activity</div>
-                  <div className="profile-info-value">
-                    {formatRelative(stats?.lastActivity)}
+
+                <div className="info-row">
+                  <div className="info-label">
+                    <Icon>◷</Icon>
+                    <span>Last Activity</span>
                   </div>
+                  <strong>{formatRelative(stats?.lastActivity)}</strong>
                 </div>
-                <div className="profile-info-row">
-                  <div className="profile-info-label">🟢 Status</div>
-                  <div className="profile-info-value profile-status">
-                    <span className="profile-status-dot"></span>
+
+                <div className="info-row">
+                  <div className="info-label">
+                    <Icon>●</Icon>
+                    <span>Status</span>
+                  </div>
+                  <div className="online-text">
+                    <span />
                     Online
                   </div>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="profile-form">
-                <div className="profile-field">
-                  <label className="profile-label">Full Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    placeholder="Enter your name"
-                    className="profile-input"
-                  />
+              {/* Form */}
+              <form onSubmit={handleSubmit}>
+                <div className="form-section">
+                  <div className="input-group">
+                    <label>Full Name</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      placeholder="Your name"
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Bio</label>
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      required
+                      placeholder="Tell something about yourself..."
+                    />
+                  </div>
                 </div>
 
-                <div className="profile-field">
-                  <label className="profile-label">Bio</label>
-                  <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    required
-                    rows={4}
-                    placeholder="Tell something about yourself..."
-                    className="profile-textarea"
-                  ></textarea>
-                </div>
-
-                <div className="profile-buttons">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="profile-save-btn"
-                  >
+                <div className="profile-actions">
+                  <button type="submit" className="save-button" disabled={loading}>
+                    <span>✓</span>
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
                   <button
                     type="button"
+                    className="logout-button"
                     onClick={handleLogout}
-                    className="profile-logout-btn"
                   >
+                    <span>↪</span>
                     Logout
                   </button>
                 </div>
@@ -317,29 +355,78 @@ const ProfilePage = () => {
             </>
           )}
 
+          {/* ===== TAB: THEME ===== */}
           {activeTab === "theme" && (
-            <div className="profile-section">
-              <h2 className="profile-section-title">🎨 Choose Your Theme</h2>
-              <p className="profile-section-desc">
+            <div style={{ padding: "10px 0" }}>
+              <h2 style={{ color: "white", marginBottom: "8px" }}>
+                🎨 Choose Your Theme
+              </h2>
+              <p style={{ color: "#7183a9", fontSize: "12px", marginBottom: "24px" }}>
                 Pick a color that matches your style.
               </p>
 
-              <div className="profile-themes-grid">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "12px",
+                }}
+              >
                 {themes.map((t) => (
                   <button
                     key={t.id}
-                    className={`profile-theme-btn ${
-                      theme === t.id ? "active" : ""
-                    }`}
                     onClick={() => handleThemeChange(t.id)}
+                    style={{
+                      position: "relative",
+                      padding: "20px 10px",
+                      borderRadius: "14px",
+                      background:
+                        theme === t.id
+                          ? "rgba(139, 92, 246, 0.2)"
+                          : "rgba(12, 27, 58, 0.72)",
+                      border:
+                        theme === t.id
+                          ? "2px solid #8b5cf6"
+                          : "1px solid rgba(104, 132, 190, 0.2)",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "white",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                    }}
                   >
                     <div
-                      className="profile-theme-color"
-                      style={{ background: t.color }}
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "50%",
+                        background: t.color,
+                        boxShadow: "0 5px 20px rgba(0,0,0,0.3)",
+                      }}
                     ></div>
                     <span>{t.label}</span>
                     {theme === t.id && (
-                      <div className="profile-theme-check">✓</div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "8px",
+                          right: "8px",
+                          width: "22px",
+                          height: "22px",
+                          borderRadius: "50%",
+                          background: "#10b981",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          color: "white",
+                        }}
+                      >
+                        ✓
+                      </div>
                     )}
                   </button>
                 ))}
@@ -347,132 +434,177 @@ const ProfilePage = () => {
             </div>
           )}
 
+          {/* ===== TAB: SECURITY ===== */}
           {activeTab === "security" && (
-            <div className="profile-section">
-              <h2 className="profile-section-title">🔒 Change Password</h2>
-              <p className="profile-section-desc">
+            <div style={{ padding: "10px 0" }}>
+              <h2 style={{ color: "white", marginBottom: "8px" }}>
+                🔒 Change Password
+              </h2>
+              <p style={{ color: "#7183a9", fontSize: "12px", marginBottom: "24px" }}>
                 Keep your account secure with a strong password.
               </p>
 
-              <form onSubmit={handlePasswordChange} className="profile-form">
-                <div className="profile-field">
-                  <label className="profile-label">Current Password</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                    placeholder="Enter current password"
-                    className="profile-input"
-                  />
+              <form onSubmit={handlePasswordChange}>
+                <div className="form-section">
+                  <div className="input-group">
+                    <label>Current Password</label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                      placeholder="Enter current password"
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="At least 6 characters"
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="Repeat new password"
+                    />
+                  </div>
                 </div>
 
-                <div className="profile-field">
-                  <label className="profile-label">New Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    placeholder="At least 6 characters"
-                    className="profile-input"
-                  />
-                </div>
-
-                <div className="profile-field">
-                  <label className="profile-label">Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    placeholder="Repeat new password"
-                    className="profile-input"
-                  />
-                </div>
-
-                <button type="submit" className="profile-save-btn">
+                <button type="submit" className="save-button" style={{ width: "100%" }}>
+                  <span>🔒</span>
                   Change Password
                 </button>
               </form>
             </div>
           )}
 
+          {/* ===== TAB: NOTIFICATIONS ===== */}
           {activeTab === "notifications" && (
-            <div className="profile-section">
-              <h2 className="profile-section-title">🔔 Notifications</h2>
-              <p className="profile-section-desc">
+            <div style={{ padding: "10px 0" }}>
+              <h2 style={{ color: "white", marginBottom: "8px" }}>
+                🔔 Notifications
+              </h2>
+              <p style={{ color: "#7183a9", fontSize: "12px", marginBottom: "24px" }}>
                 Manage how you get notified about new messages.
               </p>
 
-              <div className="profile-toggle-list">
-                <div className="profile-toggle-item">
+              <div
+                style={{
+                  background: "rgba(12, 29, 63, 0.64)",
+                  borderRadius: "14px",
+                  padding: "20px",
+                  border: "1px solid rgba(86, 116, 179, 0.27)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingBottom: "16px",
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  }}
+                >
                   <div>
-                    <div className="profile-toggle-label">🔊 Sound</div>
-                    <div className="profile-toggle-desc">
+                    <div style={{ color: "white", fontSize: "13px", fontWeight: "600" }}>
+                      🔊 Sound
+                    </div>
+                    <div style={{ color: "#7183a9", fontSize: "11px", marginTop: "4px" }}>
                       Play sound for new messages
                     </div>
                   </div>
-                  <label className="profile-switch">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={soundEnabled}
                       onChange={(e) => setSoundEnabled(e.target.checked)}
                     />
-                    <span className="profile-switch-slider"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
 
-                <div className="profile-toggle-item">
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingTop: "16px",
+                  }}
+                >
                   <div>
-                    <div className="profile-toggle-label">
+                    <div style={{ color: "white", fontSize: "13px", fontWeight: "600" }}>
                       💻 Desktop Notifications
                     </div>
-                    <div className="profile-toggle-desc">
+                    <div style={{ color: "#7183a9", fontSize: "11px", marginTop: "4px" }}>
                       Show desktop notifications
                     </div>
                   </div>
-                  <label className="profile-switch">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={desktopNotif}
                       onChange={(e) => setDesktopNotif(e.target.checked)}
                     />
-                    <span className="profile-switch-slider"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
               </div>
             </div>
           )}
 
+          {/* ===== TAB: QR CODE ===== */}
           {activeTab === "qr" && (
-            <div className="profile-section">
-              <h2 className="profile-section-title">📱 My Profile QR</h2>
-              <p className="profile-section-desc">
+            <div style={{ padding: "10px 0", textAlign: "center" }}>
+              <h2 style={{ color: "white", marginBottom: "8px" }}>
+                📱 My Profile QR
+              </h2>
+              <p style={{ color: "#7183a9", fontSize: "12px", marginBottom: "24px" }}>
                 Share your profile with others by scanning this code.
               </p>
 
-              <div className="profile-qr-container">
-                <div className="profile-qr-box">
-                  <QRCodeSVG
-                    value={`${window.location.origin}/user/${authUser?._id}`}
-                    size={200}
-                    bgColor="transparent"
-                    fgColor="#a78bfa"
-                    level="H"
-                  />
-                </div>
-                <p className="profile-qr-hint">
-                  Scan with your phone to open my profile
-                </p>
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "24px",
+                  background: "rgba(12, 29, 63, 0.64)",
+                  border: "2px solid rgba(139, 92, 246, 0.3)",
+                  borderRadius: "24px",
+                  boxShadow: "0 15px 50px rgba(139, 92, 246, 0.2)",
+                }}
+              >
+                <QRCodeSVG
+                  value={`${window.location.origin}/user/${authUser?._id}`}
+                  size={200}
+                  bgColor="transparent"
+                  fgColor="#a78bfa"
+                  level="H"
+                />
               </div>
+
+              <p style={{ color: "#7183a9", fontSize: "12px", marginTop: "20px" }}>
+                Scan with your phone to open my profile
+              </p>
             </div>
           )}
         </div>
 
-        <p className="profile-footer">Echo Chat © 2026 · Made with 💜</p>
+        <div className="profile-footer">
+          <span>Echo Chat</span>
+          <span>•</span>
+          <span>Profile & Account</span>
+        </div>
       </div>
     </div>
   );

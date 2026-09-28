@@ -105,6 +105,54 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ==================== BLOCK USER ====================
+const blockUser = async (userId) => {
+  try {
+    const { data } = await axios.put(`/api/auth/block/${userId}`);
+    if (data.success) {
+      toast.success("User blocked");
+      return true;
+    } else {
+      toast.error(data.message);
+      return false;
+    }
+  } catch (error) {
+    toast.error(error.message);
+    return false;
+  }
+};
+
+// ==================== UNBLOCK USER ====================
+const unblockUser = async (userId) => {
+  try {
+    const { data } = await axios.put(`/api/auth/unblock/${userId}`);
+    if (data.success) {
+      toast.success("User unblocked");
+      return true;
+    } else {
+      toast.error(data.message);
+      return false;
+    }
+  } catch (error) {
+    toast.error(error.message);
+    return false;
+  }
+};
+
+// ==================== GET BLOCKED USERS ====================
+const getBlockedUsers = async () => {
+  try {
+    const { data } = await axios.get("/api/auth/blocked");
+    if (data.success) {
+      return data.blockedUsers;
+    }
+    return [];
+  } catch (error) {
+    console.log(error.message);
+    return [];
+  }
+};
+
   // ==================== CHECK AUTH ====================
   useEffect(() => {
     const init = async () => {
@@ -137,16 +185,19 @@ export const AuthProvider = ({ children }) => {
   }, [socket]);
 
   const value = {
-    axios,
-    authUser,
-    onlineUsers,
-    socket,
-    login,
-    logout,
-    updateProfile,
-    getStats,
-    changePassword,
-  };
+  axios,
+  authUser,
+  onlineUsers,
+  socket,
+  login,
+  logout,
+  updateProfile,
+  getStats,
+  changePassword,
+  blockUser,
+  unblockUser,
+  getBlockedUsers,
+};
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
